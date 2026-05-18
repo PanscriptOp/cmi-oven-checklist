@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<title>Clarmil Manufacturing – Oven Start-Up Checklist</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+html,body{
+  height:100%;
+  width:100%;
+}
+
+body{
+  font-family:Calibri,'Segoe UI',Arial,sans-serif;
+  font-size:11px;
+  background:#b0b0b0;
+  color:#000;
+  min-height:100vh;
+}
+
+#page{
+  background:#fff;
+  margin:0;
+  padding:6px 8px 0;
+  border:none;
+  width:100%;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── PAGE HEADER ─────────────────────────────── */
+.pg-hdr{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:5px;
+  flex-shrink:0;
+}
+.co-name{font-weight:bold;font-size:12px;line-height:1.3;}
+.doc-title{font-size:11px;}
+.date-box{display:flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap;}
+.date-box label{font-weight:normal;}
+.date-box input{
+  border:1px solid #333;
+  padding:1px 3px;
+  font-size:11px;
+  font-family:inherit;
+  width:88px;
+  background:#fff;
+  border-radius:0;
+}
+
+/* ── TABLE WRAPPERS ──────────────────────────── */
+.tbl-wrap{
+  position:relative;
+  overflow-x:auto;
+  overflow-y:visible;
+  margin-bottom:4px;
+  width:100%;
+  flex-shrink:0;
+}
+
+/* ── CORE TABLE ──────────────────────────────── */
+.ct{
+  border-collapse:collapse;
+  font-size:11px;
+  background:#fff;
+  width:100%;
+  table-layout:fixed;
+}
+.ct th,.ct td{
+  border:1px solid #222;
+  padding:1px 2px;
+  vertical-align:middle;
+  text-align:center;
+  white-space:nowrap;
+  line-height:1.2;
+}
+
+/* Section title */
+.sec-title{
+  background:#e2efda;
+  font-weight:bold;
+  text-align:left;
+  padding-left:5px;
+  font-size:11px;
+  letter-spacing:.2px;
+}
+.ok-dot{color:#008000;font-size:12px;}
+.nok-dot{color:#c00000;font-size:12px;}
+
+/* Group header */
+.grp-hdr{
+  background:#bdd7ee;
+  font-weight:bold;
+  font-size:11px;
+  border-bottom:2px solid #111;
+  border-top:2px solid #111;
+}
+
+/* Column header */
+.col-hdr{
+  background:#d9d9d9;
+  font-size:10px;
+  font-weight:bold;
+  min-width:58px;
+  width:58px;
+  line-height:1.2;
+  white-space:normal;
+  padding:1px 2px;
+}
+
+/* Fixed columns */
+.c-ino{
+  background:#d9d9d9;
+  font-weight:bold;
+  min-width:28px;
+  width:28px;
+  font-size:10px;
+  white-space:normal;
+  line-height:1.2;
+}
+.c-lbl{
+  background:#f0f0f0;
+  text-align:left;
+  min-width:130px;
+  width:130px;
+  white-space:normal;
+  padding:1px 3px;
+  font-size:10px;
+  line-height:1.25;
+}
+
+/* ── TOGGLE ROW ──────────────────────────────── */
+.tog-td{
+  background:#e8e8e8;
+  padding:2px 2px;
+  border-top:2px solid #111;
+}
+.tog-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:1px;
+}
+.tog-lbl{
+  font-size:7px;
+  font-weight:bold;
+  color:#2d7a2d;
+  letter-spacing:.4px;
+  line-height:1;
+}
+
+/* Pill toggle */
+.toggle{
+  position:relative;
+  width:25px;
+  height:10px;
+  cursor:pointer;
+  display:inline-block;
+  user-select:none;
+}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.tog-track{
+  position:absolute;inset:0;
+  background:#4CAF50;
+  border:1px solid #2d7a2d;
+  border-radius:0;
+  transition:background .12s;
+}
+.tog-knob{
+  position:absolute;
+  width:7px;height:7px;
+  top:1px;left:1px;
+  background:#fff;
+  border:1px solid #aaa;
+  border-radius:0;
+  transition:left .12s;
+}
+.toggle.off .tog-track{background:#bbb;border-color:#999;}
+.toggle.off .tog-knob{left:15px;}
+
+/* ── DATA CELLS ──────────────────────────────── */
+.ck{
+  cursor:pointer;
+  font-size:13px;
+  user-select:none;
+  min-width:58px;
+  width:58px;
+  position:relative;
+  padding:1px 2px;
+}
+.ck[data-state="check"]{color:#008000;background:#fff;}
+.ck[data-state="na"]{
+  color:#000;
+  background:#e0e0e0;
+  font-size:9px;
+  font-weight:bold;
+  letter-spacing:.5px;
+}
+.ck[data-state="blank"]{color:transparent;background:#fff;}
+.ck:hover:not(.col-off){background:#eaf5ea!important;}
+.ck[data-state="na"]:hover:not(.col-off){background:#d4d4d4!important;}
+
+/* Temperature cell */
+.tmp{
+  padding:0;
+  min-width:58px;
+  width:58px;
+}
+.tmp-inner{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  padding:0 2px;
+}
+.tmp-inp{
+  display:block;
+  width:38px;
+  border:none;
+  border-bottom:1px solid #888;
+  background:transparent;
+  text-align:center;
+  font-size:11px;
+  font-family:inherit;
+  padding:1px 1px;
+  outline:none;
+  border-radius:0;
+}
+.tmp-inp:focus{
+  border-bottom:1px solid #0070c0;
+  background:#f0f8ff;
+}
+.tmp-unit{
+  font-size:9px;
+  color:#444;
+  white-space:nowrap;
+  flex-shrink:0;
+  line-height:1;
+}
+
+/* Disabled column cell */
+.col-off{
+  background:rgba(200,20,20,.07)!important;
+  cursor:not-allowed!important;
+}
+.col-off .tmp-inp{
+  pointer-events:none;
+  opacity:.25;
+}
+.col-off:hover{background:rgba(200,20,20,.07)!important;}
+
+/* Alternating row tint */
+.ct tbody tr:nth-child(even) .ck:not(.col-off),
+.ct tbody tr:nth-child(even) .tmp:not(.col-off){background:#f7f7f7;}
+.ct tbody tr:nth-child(even) .ck[data-state="na"]:not(.col-off){background:#d8d8d8;}
+
+/* ── NO-OPERATION OVERLAY ─────────────────────── */
+.col-overlay{
+  position:absolute;
+  background:rgba(200,0,0,.13);
+  border-left:2px solid rgba(200,0,0,.5);
+  border-right:2px solid rgba(200,0,0,.5);
+  border-top:1px solid rgba(200,0,0,.25);
+  border-bottom:1px solid rgba(200,0,0,.25);
+  z-index:30;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:all;
+  cursor:not-allowed;
+}
+.col-overlay-txt{
+  writing-mode:vertical-rl;
+  transform:rotate(180deg);
+  color:#c00000;
+  font-weight:bold;
+  font-size:9px;
+  letter-spacing:3px;
+  user-select:none;
+  font-family:Calibri,Arial,sans-serif;
+  text-transform:uppercase;
+}
+
+/* ── ACTION BAR ──────────────────────────────── */
+.action-bar{
+  flex-shrink:0;
+  display:flex;
+  gap:6px;
+  align-items:center;
+  padding:4px 0;
+  flex-wrap:wrap;
+}
+.action-bar button{
+  font-family:inherit;
+  font-size:11px;
+  padding:3px 10px;
+  border:1px solid #555;
+  background:#e8e8e8;
+  cursor:pointer;
+  border-radius:0;
+}
+.action-bar button:hover{background:#d0d0d0;}
+.action-bar button:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Hidden file input trigger */
+#fileInput{display:none;}
+
+#statusMsg{
+  font-size:10px;
+  font-style:italic;
+  color:#555;
+}
+
+/* ── RECORDS PANEL ───────────────────────────── */
+#recordsPanel{
+  flex-shrink:0;
+  border:1px solid #aaa;
+  background:#f9f9f9;
+  margin-bottom:4px;
+  display:none; /* hidden until toggled */
+}
+#recordsPanel .rp-hdr{
+  background:#d9d9d9;
+  border-bottom:1px solid #aaa;
+  padding:3px 6px;
+  font-weight:bold;
+  font-size:11px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+#recordsPanel .rp-hdr button{
+  font-size:10px;
+  padding:1px 6px;
+  border:1px solid #888;
+  background:#fff;
+  cursor:pointer;
+  border-radius:0;
+}
+#recordsList{
+  max-height:180px;
+  overflow-y:auto;
+}
+#recordsList table{
+  border-collapse:collapse;
+  width:100%;
+  font-size:11px;
+}
+#recordsList th{
+  background:#e8e8e8;
+  border:1px solid #bbb;
+  padding:2px 5px;
+  text-align:left;
+  font-weight:bold;
+  position:sticky;
+  top:0;
+}
+#recordsList td{
+  border:1px solid #ddd;
+  padding:2px 5px;
+  vertical-align:middle;
+}
+#recordsList tr:hover td{background:#eef4ff;}
+#recordsList .btn-load-rec{
+  font-size:10px;
+  padding:1px 5px;
+  border:1px solid #555;
+  background:#e8f0fe;
+  cursor:pointer;
+  border-radius:0;
+  margin-right:2px;
+}
+#recordsList .btn-del-rec{
+  font-size:10px;
+  padding:1px 5px;
+  border:1px solid #c00;
+  background:#fee;
+  cursor:pointer;
+  border-radius:0;
+}
+#recordsList .btn-load-rec:hover{background:#cde;}
+#recordsList .btn-del-rec:hover{background:#fcc;}
+.rp-empty{
+  padding:8px;
+  color:#888;
+  font-style:italic;
+  font-size:11px;
+  text-align:center;
+}
+
+/* ── FOOTER ──────────────────────────────────── */
+#footer-area{
+  flex:1 1 auto;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+.ft-tbl{
+  border-collapse:collapse;
+  width:100%;
+  height:100%;
+}
+.ft-tbl td{
+  border:1px solid #222;
+  padding:3px 5px;
+  font-size:11px;
+  vertical-align:top;
+}
+.ft-top-row td{
+  height:28px;
+  vertical-align:middle;
+}
+.ft-remarks-cell{
+  height:100%;
+  vertical-align:top;
+  padding:3px 5px;
+}
+.ft-inp{
+  border:none;
+  border-bottom:1px solid #888;
+  font-family:inherit;
+  font-size:11px;
+  width:200px;
+  margin-left:4px;
+  padding:1px 2px;
+  border-radius:0;
+}
+.ft-inp:focus{outline:none;border-bottom:1px solid #0070c0;}
+.ft-rem{
+  border:none;
+  font-family:inherit;
+  font-size:11px;
+  width:100%;
+  height:calc(100% - 18px);
+  min-height:60px;
+  resize:none;
+  display:block;
+  margin-top:2px;
+  padding:2px;
+  border-radius:0;
+  background:transparent;
+}
+.ft-rem:focus{outline:none;background:#fafff0;}
+
+/* Print */
+@media print{
+
+  body{
+    background:#fff;
+  }
+
+  #page{
+    box-shadow:none;
+    margin:0;
+    border:none;
+    padding:4px;
+    min-height:0;
+  }
+
+  .tbl-wrap{
+    overflow:visible;
+  }
+
+  .toggle{
+    display:none;
+  }
+
+  /* Hide overlay */
+  .col-overlay{
+    display:none !important;
+  }
+
+  /* OFF columns */
+  .col-off{
+    background:#f2dede !important;
+    color:#000 !important;
+    position:relative;
+  }
+
+  /* Show NO OPERATION in print */
+  .col-off::after{
+    content:"NO OPERATION";
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:8px;
+    font-weight:bold;
+    color:#c00000;
+    writing-mode:vertical-rl;
+    transform:rotate(180deg);
+    letter-spacing:2px;
+    pointer-events:none;
+  }
+
+  /* Force borders to print properly */
+  .ct,
+  .ct th,
+  .ct td{
+    border:1px solid #000 !important;
+  }
+
+  .action-bar{
+    display:none;
+  }
+
+  #recordsPanel{
+    display:none !important;
+  }
+
+}
+@page{
+  size: landscape;
+  margin: 5mm;
+}
+</style>
+</head>
+<body>
+<div id="page">
+
+  <!-- ─────── PAGE HEADER ─────── -->
+  <div class="pg-hdr">
+    <div>
+      <div class="co-name">Clarmil Manufacturing Inc.</div>
+      <div class="doc-title">Oven Start Up Checklist</div>
+    </div>
+    <div class="date-box">
+      <label>Date:</label>
+      <input type="text" id="dtf" />
+    </div>
+  </div>
+
+  <!-- ─────── TABLES ─────── -->
+  <div id="w1" class="tbl-wrap"></div>
+  <div id="w2" class="tbl-wrap"></div>
+
+  <!-- ─────── ACTION BAR ─────── -->
+  <div class="action-bar">
+    <button id="btnSave">💾 Save</button>
+    <button id="btnExport">⬇ Export Excel</button>
+    <button id="btnImport">⬆ Import Excel</button>
+    <input id="fileInput" type="file" accept=".xlsx,.xls">
+    <button id="btnClear">🗑 Clear Form</button>
+    <button id="btnRecords">📋 Saved Records</button>
+    <button id="btnPrint">🖨 Print</button>
+    <span   id="statusMsg"></span>
+  </div>
+
+  <!-- ─────── RECORDS PANEL ─────── -->
+  <div id="recordsPanel">
+    <div class="rp-hdr">
+      <span>Saved Records (stored in this browser)</span>
+      <button id="btnCloseRecords">✕ Close</button>
+    </div>
+    <div id="recordsList"></div>
+  </div>
+
+  <!-- ─────── FOOTER ─────── -->
+  <div id="footer-area">
+    <table class="ft-tbl">
+      <colgroup>
+        <col style="width:48%">
+        <col style="width:52%">
+      </colgroup>
+      <tbody>
+        <tr class="ft-top-row">
+          <td>Conducted by:
+            <input class="ft-inp" type="text" value="Gener Castro" />
+          </td>
+          <td class="ft-remarks-cell" rowspan="2">
+            <span style="font-size:11px;">Remarks:</span>
+            <textarea class="ft-rem"></textarea>
+          </td>
+        </tr>
+        <tr class="ft-top-row">
+          <td>Checked by:
+            <input class="ft-inp" type="text" value="Adrian/Sir Emil" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /#page -->
+
+<script>
+// ════════════════════════════════════════════════════════
+//  TEMPERATURE UNIT MAP
+// ════════════════════════════════════════════════════════
+const UNIT_MAP = {
+  'Rotary Deck Oven 1' : '°C',
+  'Rotary Deck Oven 2' : '°C',
+  'Rotary Deck Oven 3' : '°C',
+  'Rotary Deck Oven 4' : '°C',
+  'LPG Rack1'          : '°F',
+  'LPG Rack2'          : '°F',
+  'LPG Rack3'          : '°F',
+  'LPG Rack4'          : '°F',
+  'LPG Rack5'          : '°F',
+  'Diesel Rack6'       : '°F',
+  'Diesel Rack7'       : '°F',
+  'Rotary Deck 1'      : '°F',
+  'Rotary Deck 2'      : '°F',
+  'Spooner Oven'       : '°C',
+  'LPG Rack 1'         : '°C',
+  'LPG Rack 2'         : '°C',
+  'LPG Rack 3'         : '°C',
+  'Rotary Deck'        : '°C',
+  'LPG Deck Oven1'     : '°C',
+  'LPG Deck Oven2'     : '°C',
+  'LPG Deck Oven3'     : '°C',
+  'LPG Deck Oven4'     : '°C',
+  'Electric Deck Oven1': '°C',
+};
+
+// ════════════════════════════════════════════════════════
+//  DATA DEFINITIONS
+// ════════════════════════════════════════════════════════
+const TABLES = [
+  {
+    id:'tbl1', wid:'w1',
+    groups:[
+      {
+        name:'Egg Pie/ Brazo/ LF - Reed Ovens',
+        cols:['Rotary Deck<br>Oven 1','Rotary Deck<br>Oven 2',
+              'Rotary Deck<br>Oven 3','Rotary Deck<br>Oven 4']
+      },
+      {
+        name:'Chiffon Line - Baxter Ovens',
+        cols:['LPG Rack1','LPG Rack2','LPG Rack3','LPG Rack4','LPG Rack5',
+              'Diesel Rack6','Diesel Rack7','Rotary Deck<br>1','Rotary Deck<br>2']
+      }
+    ]
+  },
+  {
+    id:'tbl2', wid:'w2',
+    groups:[
+      {
+        name:'Sponge Line',
+        cols:['Spooner Oven']
+      },
+      {
+        name:'CBT - Havsheng/<br>Marshall Ovens',
+        cols:['LPG Rack 1','LPG Rack 2','LPG Rack 3','Rotary Deck']
+      },
+      {
+        name:'Mammon Line - Havsheng Ovens',
+        cols:['LPG Deck<br>Oven1','LPG Deck<br>Oven2','LPG Deck<br>Oven3',
+              'LPG Deck<br>Oven4','Electric Deck<br>Oven1']
+      }
+    ]
+  }
+];
+
+const ROWS = [
+  {num:1, label:'LPG/ Diesel line supply<br>valve open?',  type:'check'},
+  {num:2, label:'Power supply ok?',                        type:'check'},
+  {num:3, label:'Fuel line leaks?',                        type:'check'},
+  {num:4, label:'Burner start up<br>sequence ok?',         type:'check'},
+  {num:5, label:'Blue Flame?',                             type:'check'},
+  {num:6, label:'Input Temp set value',                    type:'temp'},
+  {num:7, label:'Input Temp actual value',                 type:'temp'},
+  {num:8, label:"No elec'l/ mech'l issues<br>observed?",  type:'check'}
+];
+
+const colState = {};
+const LS_KEY   = 'clarmil_oven_records'; // localStorage key
+
+// ════════════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════════════
+function mkEl(tag, cls) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  return e;
+}
+function plainLabel(html) {
+  return html.replace(/<br\s*\/?>/gi,' ').replace(/<[^>]+>/g,'').trim();
+}
+function unitFor(colHtml) {
+  return UNIT_MAP[plainLabel(colHtml)] || '°C';
+}
+function setStatus(msg, isErr) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.style.color = isErr ? '#c00000' : '#2d7a2d';
+  // auto-clear after 4 s
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.textContent = ''; }, 4000);
+}
+
+// ════════════════════════════════════════════════════════
+//  3-STATE CYCLE  blank → check → na → blank
+// ════════════════════════════════════════════════════════
+function cycleCell(cell) {
+  if (cell.classList.contains('col-off')) return;
+  const cur  = cell.dataset.state || 'blank';
+  const next = cur === 'blank' ? 'check'
+             : cur === 'check' ? 'na'
+             :                   'blank';
+  applyState(cell, next);
+}
+function applyState(cell, state) {
+  cell.dataset.state = state;
+  if      (state === 'check') cell.textContent = '✔';
+  else if (state === 'na')    cell.textContent = 'N/A';
+  else                        cell.textContent = '';
+}
+
+// ════════════════════════════════════════════════════════
+//  BUILD TABLE
+// ════════════════════════════════════════════════════════
+function buildTable(def) {
+  const allCols = def.groups.flatMap(g => g.cols);
+  const N = allCols.length;
+  for (let ci = 0; ci < N; ci++) colState[`${def.id}-${ci}`] = true;
+
+  const tbl = mkEl('table');
+  tbl.id = def.id; tbl.className = 'ct';
+  const thead = mkEl('thead');
+
+  // TR1
+  const tr1 = mkEl('tr');
+  const tdIno = mkEl('td','c-ino'); tdIno.rowSpan=4; tdIno.textContent='Item No.';
+  const tdLbl = mkEl('td','c-lbl'); tdLbl.rowSpan=4; tdLbl.textContent='Description';
+  const tdSec = mkEl('td','sec-title'); tdSec.colSpan=N;
+  tdSec.innerHTML='CHECK ITEMS&nbsp;&nbsp;( OK <span class="ok-dot">&#x2714;</span> / NOT OK <span class="nok-dot">&#x2718;</span> )';
+  tr1.append(tdIno, tdLbl, tdSec);
+  thead.appendChild(tr1);
+
+  // TR2 group headers
+  const tr2 = mkEl('tr');
+  def.groups.forEach(g => {
+    const th = mkEl('th','grp-hdr');
+    th.colSpan = g.cols.length; th.innerHTML = g.name;
+    tr2.appendChild(th);
+  });
+  thead.appendChild(tr2);
+
+  // TR3 column names
+  const tr3 = mkEl('tr');
+  allCols.forEach(c => {
+    const th = mkEl('th','col-hdr'); th.innerHTML = c;
+    tr3.appendChild(th);
+  });
+  thead.appendChild(tr3);
+
+  // TR4 toggles
+  const tr4 = mkEl('tr');
+  allCols.forEach((_, ci) => {
+    const td   = mkEl('td','tog-td');
+    const wrap = mkEl('div','tog-wrap');
+    const lbl  = mkEl('span','tog-lbl');
+    lbl.id = `tl-${def.id}-${ci}`; lbl.textContent = 'ON';
+    const tog   = mkEl('div','toggle'); tog.id = `tg-${def.id}-${ci}`;
+    const inp   = mkEl('input'); inp.type='checkbox'; inp.checked=true;
+    const track = mkEl('div','tog-track');
+    const knob  = mkEl('div','tog-knob');
+    tog.append(inp, track, knob);
+    tog.addEventListener('click', () => toggleCol(def.id, ci));
+    wrap.append(lbl, tog); td.appendChild(wrap); tr4.appendChild(td);
+  });
+  thead.appendChild(tr4);
+  tbl.appendChild(thead);
+
+  // TBODY
+  const tbody = mkEl('tbody');
+  ROWS.forEach((row, ri) => {
+    const tr  = mkEl('tr');
+    const tno = mkEl('td','c-ino'); tno.textContent = row.num;
+    const tlb = mkEl('td','c-lbl'); tlb.innerHTML   = row.label;
+    tr.append(tno, tlb);
+
+    for (let ci = 0; ci < N; ci++) {
+      const td = document.createElement('td');
+      td.dataset.t  = def.id;
+      td.dataset.ci = ci;
+      td.dataset.ri = ri;
+
+      if (row.type === 'check') {
+        td.className = 'ck'; td.dataset.state = 'blank'; td.textContent = '';
+        td.addEventListener('click', function(){ cycleCell(this); });
+      } else {
+        td.className = 'tmp';
+        const inner = mkEl('div','tmp-inner');
+        const inp   = document.createElement('input');
+        inp.type='text'; inp.className='tmp-inp';
+        inp.dataset.t=def.id; inp.dataset.ci=ci; inp.dataset.ri=ri;
+        const unit = mkEl('span','tmp-unit');
+        unit.textContent = unitFor(allCols[ci]);
+        inner.append(inp, unit); td.appendChild(inner);
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  });
+
+  tbl.appendChild(tbody);
+  document.getElementById(def.wid).appendChild(tbl);
+}
+
+// ════════════════════════════════════════════════════════
+//  TOGGLE COLUMN
+// ════════════════════════════════════════════════════════
+function toggleCol(tId, ci) {
+  const key = `${tId}-${ci}`;
+  colState[key] = !colState[key];
+  applyColDOM(tId, ci, colState[key]);
+}
+function applyColDOM(tId, ci, isOn) {
+  const tog = document.getElementById(`tg-${tId}-${ci}`);
+  const lbl = document.getElementById(`tl-${tId}-${ci}`);
+  if (!tog||!lbl) return;
+  tog.classList.toggle('off', !isOn);
+  lbl.textContent = isOn ? 'ON' : 'OFF';
+  lbl.style.color = isOn ? '#2d7a2d' : '#c00000';
+  document.querySelectorAll(`[data-t="${tId}"][data-ci="${ci}"]`).forEach(cell => {
+    if (!isOn) {
+      cell.classList.add('col-off');
+      if (cell.classList.contains('ck')) applyState(cell,'blank');
+      cell.querySelectorAll('input').forEach(i => { i.value=''; i.disabled=true; });
+    } else {
+      cell.classList.remove('col-off');
+      cell.querySelectorAll('input').forEach(i => i.disabled=false);
+    }
+  });
+  setOverlay(tId, ci, !isOn);
+}
+
+// ════════════════════════════════════════════════════════
+//  OVERLAY
+// ════════════════════════════════════════════════════════
+function setOverlay(tId, ci, show) {
+  const oid = `ov-${tId}-${ci}`;
+  const ex  = document.getElementById(oid);
+  if (ex) ex.remove();
+  if (!show) return;
+  const cells = document.querySelectorAll(`[data-t="${tId}"][data-ci="${ci}"]`);
+  if (!cells.length) return;
+  const wrap = document.getElementById(tId).closest('.tbl-wrap');
+  const fc   = cells[0], lc = cells[cells.length-1];
+  const ov   = document.createElement('div');
+  ov.id = oid; ov.className = 'col-overlay';
+  ov.style.cssText =
+    `left:${fc.offsetLeft}px;top:${fc.offsetTop}px;` +
+    `width:${fc.offsetWidth}px;` +
+    `height:${lc.offsetTop+lc.offsetHeight-fc.offsetTop}px`;
+  const txt = document.createElement('div');
+  txt.className='col-overlay-txt'; txt.textContent='NO OPERATION';
+  ov.appendChild(txt); wrap.appendChild(ov);
+}
+function recalcOverlays() {
+  TABLES.forEach(def => {
+    const N = def.groups.reduce((a,g)=>a+g.cols.length,0);
+    for (let ci=0;ci<N;ci++)
+      if (!colState[`${def.id}-${ci}`]) setOverlay(def.id,ci,true);
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  COLLECT FORM DATA INTO A PLAIN OBJECT
+// ════════════════════════════════════════════════════════
+function collectData() {
+  const cells = {}, temps = {};
+
+  document.querySelectorAll('.ck').forEach(cell => {
+    const k = `${cell.dataset.t}|${cell.dataset.ci}|${cell.dataset.ri}`;
+    cells[k] = cell.dataset.state || 'blank';
+  });
+  document.querySelectorAll('.tmp-inp').forEach(inp => {
+    const k = `${inp.dataset.t}|${inp.dataset.ci}|${inp.dataset.ri}`;
+    temps[k] = inp.value;
+  });
+
+  return {
+    savedAt    : new Date().toISOString(),
+    date       : document.getElementById('dtf').value.trim(),
+    conductedBy: document.querySelectorAll('.ft-inp')[0].value,
+    checkedBy  : document.querySelectorAll('.ft-inp')[1].value,
+    remarks    : document.querySelector('.ft-rem').value,
+    columns    : Object.assign({}, colState),
+    cells,
+    temps
+  };
+}
+
+// ════════════════════════════════════════════════════════
+//  RESTORE FORM DATA FROM A PLAIN OBJECT
+// ════════════════════════════════════════════════════════
+function restoreData(data) {
+  // header
+  if (data.date) document.getElementById('dtf').value = data.date;
+  document.querySelectorAll('.ft-inp')[0].value = data.conductedBy || '';
+  document.querySelectorAll('.ft-inp')[1].value = data.checkedBy   || '';
+  document.querySelector('.ft-rem').value        = data.remarks     || '';
+
+  // column toggles
+  const savedCols = data.columns || {};
+  Object.keys(savedCols).forEach(key => { colState[key] = savedCols[key]; });
+  TABLES.forEach(def => {
+    const N = def.groups.reduce((a,g)=>a+g.cols.length,0);
+    for (let ci=0;ci<N;ci++)
+      applyColDOM(def.id, ci, colState[`${def.id}-${ci}`] !== false);
+  });
+
+  // check cells
+  const savedCells = data.cells || {};
+  document.querySelectorAll('.ck').forEach(cell => {
+    const k = `${cell.dataset.t}|${cell.dataset.ci}|${cell.dataset.ri}`;
+    applyState(cell, savedCells[k] || 'blank');
+  });
+
+  // temperature inputs
+  const savedTemps = data.temps || {};
+  document.querySelectorAll('.tmp-inp').forEach(inp => {
+    const k = `${inp.dataset.t}|${inp.dataset.ci}|${inp.dataset.ri}`;
+    inp.value = savedTemps[k] || '';
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  CLEAR FORM
+// ════════════════════════════════════════════════════════
+function clearForm() {
+  // reset check cells
+  document.querySelectorAll('.ck').forEach(cell => applyState(cell,'blank'));
+  // reset temp inputs
+  document.querySelectorAll('.tmp-inp').forEach(inp => { inp.value=''; });
+  // reset all column toggles to ON
+  TABLES.forEach(def => {
+    const N = def.groups.reduce((a,g)=>a+g.cols.length,0);
+    for (let ci=0;ci<N;ci++) {
+      colState[`${def.id}-${ci}`] = true;
+      applyColDOM(def.id, ci, true);
+    }
+  });
+  // reset footer
+  document.querySelectorAll('.ft-inp')[0].value = 'Gener Castro';
+  document.querySelectorAll('.ft-inp')[1].value = 'Adrian/Sir Emil';
+  document.querySelector('.ft-rem').value = '';
+  // reset date to today
+  setTodayDate();
+  setStatus('Form cleared.', false);
+}
+
+// ════════════════════════════════════════════════════════
+//  LOCAL STORAGE  — all records stored as an array
+// ════════════════════════════════════════════════════════
+function loadAllRecords() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  } catch { return []; }
+}
+function saveAllRecords(arr) {
+  localStorage.setItem(LS_KEY, JSON.stringify(arr));
+}
+
+// Save current form to localStorage
+function saveRecord() {
+  const data = collectData();
+  if (!data.date) { setStatus('Enter a date first.', true); return; }
+
+  const all = loadAllRecords();
+  // overwrite if same date already exists
+  const idx = all.findIndex(r => r.date === data.date);
+  if (idx >= 0) {
+    if (!confirm(`A record for "${data.date}" already exists. Overwrite it?`)) return;
+    all[idx] = data;
+  } else {
+    all.push(data);
+  }
+  saveAllRecords(all);
+  setStatus(`Saved: ${data.date}  ✔`, false);
+  renderRecordsList(); // refresh panel if open
+}
+// ════════════════════════════════════════════════════════
+//  EXPORT EXCEL
+// ════════════════════════════════════════════════════════
+function exportExcel() {
+
+  const data = collectData();
+
+  const rows = [];
+
+  rows.push(["Clarmil Manufacturing Inc."]);
+  rows.push(["Oven Start Up Checklist"]);
+  rows.push([]);
+
+  rows.push(["Date", data.date]);
+  rows.push(["Conducted By", data.conductedBy]);
+  rows.push(["Checked By", data.checkedBy]);
+  rows.push(["Remarks", data.remarks]);
+  rows.push([]);
+
+  // Column states
+  rows.push(["COLUMN STATES"]);
+  rows.push(["Key", "Enabled"]);
+
+  Object.keys(data.columns).forEach(key => {
+    rows.push([key, data.columns[key] ? "ON" : "OFF"]);
+  });
+
+  rows.push([]);
+  rows.push(["CHECK CELLS"]);
+  rows.push(["Key", "State"]);
+
+  Object.keys(data.cells).forEach(key => {
+    rows.push([key, data.cells[key]]);
+  });
+
+  rows.push([]);
+  rows.push(["TEMPERATURES"]);
+  rows.push(["Key", "Value"]);
+
+  Object.keys(data.temps).forEach(key => {
+    rows.push([key, data.temps[key]]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Checklist");
+
+  XLSX.writeFile(
+    wb,
+    `oven-checklist-${data.date || 'draft'}.xlsx`
+  );
+
+  setStatus('Excel exported successfully.', false);
+}
+// ════════════════════════════════════════════════════════
+//  IMPORT EXCEL
+// ════════════════════════════════════════════════════════
+function importExcel(file) {
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+
+    try {
+
+      const data = new Uint8Array(e.target.result);
+
+      const workbook = XLSX.read(data, { type: 'array' });
+
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      const json = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: ''
+      });
+
+      const restored = {
+        columns: {},
+        cells: {},
+        temps: {}
+      };
+
+      let section = '';
+
+      json.forEach(row => {
+
+        if (row[0] === 'Date')
+          restored.date = row[1] || '';
+
+        if (row[0] === 'Conducted By')
+          restored.conductedBy = row[1] || '';
+
+        if (row[0] === 'Checked By')
+          restored.checkedBy = row[1] || '';
+
+        if (row[0] === 'Remarks')
+          restored.remarks = row[1] || '';
+
+        if (row[0] === 'COLUMN STATES')
+          section = 'columns';
+
+        else if (row[0] === 'CHECK CELLS')
+          section = 'cells';
+
+        else if (row[0] === 'TEMPERATURES')
+          section = 'temps';
+
+        else if (
+          row[0] &&
+          row[0] !== 'Key' &&
+          row[0] !== 'Enabled' &&
+          row[0] !== 'State' &&
+          row[0] !== 'Value'
+        ) {
+
+          if (section === 'columns')
+            restored.columns[row[0]] = row[1] === 'ON';
+
+          else if (section === 'cells')
+            restored.cells[row[0]] = row[1];
+
+          else if (section === 'temps')
+            restored.temps[row[0]] = row[1];
+        }
+
+      });
+
+      restoreData(restored);
+
+      setStatus('Excel imported successfully.', false);
+
+    } catch(err) {
+
+      console.error(err);
+
+      setStatus('Invalid Excel file.', true);
+
+    }
+
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+// ════════════════════════════════════════════════════════
+//  RECORDS PANEL
+// ════════════════════════════════════════════════════════
+function renderRecordsList() {
+  const panel = document.getElementById('recordsList');
+  const all   = loadAllRecords();
+
+  if (!all.length) {
+    panel.innerHTML = '<div class="rp-empty">No saved records yet.</div>';
+    return;
+  }
+
+  // Sort newest first
+  all.sort((a,b) => (b.savedAt||'').localeCompare(a.savedAt||''));
+
+  const tbl  = document.createElement('table');
+  const thead = document.createElement('thead');
+  thead.innerHTML =
+    '<tr>' +
+    '<th>#</th>' +
+    '<th>Date</th>' +
+    '<th>Conducted By</th>' +
+    '<th>Checked By</th>' +
+    '<th>Saved At</th>' +
+    '<th>Actions</th>' +
+    '</tr>';
+  tbl.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  all.forEach((rec, idx) => {
+    const tr = document.createElement('tr');
+
+    // format savedAt nicely
+    let savedAt = '—';
+    if (rec.savedAt) {
+      const d = new Date(rec.savedAt);
+      savedAt = d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+    }
+
+    tr.innerHTML =
+      `<td>${all.length - idx}</td>` +
+      `<td><b>${rec.date || '—'}</b></td>` +
+      `<td>${rec.conductedBy || '—'}</td>` +
+      `<td>${rec.checkedBy   || '—'}</td>` +
+      `<td>${savedAt}</td>` +
+      `<td>` +
+        `<button class="btn-load-rec" data-i="${idx}">📂 Load</button>` +
+        `<button class="btn-del-rec"  data-i="${idx}">🗑 Delete</button>` +
+      `</td>`;
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+  panel.innerHTML = '';
+  panel.appendChild(tbl);
+
+  // wire buttons
+  panel.querySelectorAll('.btn-load-rec').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // find the record by original index (all is sorted, use date as key)
+      const rec = all[parseInt(btn.dataset.i)];
+      restoreData(rec);
+      setStatus(`Loaded: ${rec.date}  ✔`, false);
+      // close panel
+      document.getElementById('recordsPanel').style.display = 'none';
+    });
+  });
+  panel.querySelectorAll('.btn-del-rec').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rec = all[parseInt(btn.dataset.i)];
+      if (!confirm(`Delete record for "${rec.date}"?`)) return;
+      const fresh = loadAllRecords();
+      const fi    = fresh.findIndex(r => r.date === rec.date && r.savedAt === rec.savedAt);
+      if (fi >= 0) { fresh.splice(fi,1); saveAllRecords(fresh); }
+      renderRecordsList();
+      setStatus(`Deleted: ${rec.date}`, false);
+    });
+  });
+}
+
+function toggleRecordsPanel() {
+  const panel = document.getElementById('recordsPanel');
+  const isHidden = panel.style.display === 'none' || panel.style.display === '';
+  if (isHidden) {
+    panel.style.display = 'block';
+    renderRecordsList();
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  DATE UTILITY
+// ════════════════════════════════════════════════════════
+function setTodayDate() {
+  const d  = new Date();
+  const mo = ['Jan','Feb','Mar','Apr','May','Jun',
+               'Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('dtf').value =
+    d.getDate()+'-'+mo[d.getMonth()]+'-'+String(d.getFullYear()).slice(-2);
+}
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+setTodayDate();
+TABLES.forEach(buildTable);
+
+document.querySelectorAll('.tbl-wrap').forEach(w =>
+  w.addEventListener('scroll', recalcOverlays)
+);
+window.addEventListener('resize', recalcOverlays);
+
+// Button wiring
+document.getElementById('btnSave').addEventListener('click', saveRecord);
+
+document.getElementById('btnExport').addEventListener('click', exportExcel);
+
+document.getElementById('btnImport').addEventListener('click', () => {
+  document.getElementById('fileInput').value = ''; // reset so same file can be re-imported
+  document.getElementById('fileInput').click();
+});
+document.getElementById('fileInput').addEventListener('change', e => {
+  importExcel(e.target.files[0]);
+});
+
+document.getElementById('btnClear').addEventListener('click', () => {
+  if (confirm('Clear all form data and reset to blank?')) clearForm();
+});
+
+document.getElementById('btnRecords').addEventListener('click', toggleRecordsPanel);
+document.getElementById('btnCloseRecords').addEventListener('click', () => {
+  document.getElementById('recordsPanel').style.display = 'none';
+});
+
+document.getElementById('btnPrint').addEventListener('click', () => window.print());
+
+</script>
+</body>
+</html>
